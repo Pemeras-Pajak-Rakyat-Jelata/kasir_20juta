@@ -300,7 +300,7 @@ MIT License — Bebas digunakan dan dimodifikasi
 
 <div align="center">
 
-**Kasir Barokah** — *Semoga usahamu selalu berkah* 🤲
+**Warung Al-Ashr** — *Semoga usahamu selalu berkah* 🤲
 
 بَارَكَ اللهُ فِي رِزْقِكَ
 
