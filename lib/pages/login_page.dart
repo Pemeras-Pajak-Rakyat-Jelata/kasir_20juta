@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/supabase_service.dart';
-import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,9 +16,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _loading = false;
   bool _obscure = true;
-  int _logoTapCount = 0;
 
-  // SECURITY LOGIN
   int _failedAttempts = 0;
   DateTime? _lockUntil;
   Timer? _timer;
@@ -51,10 +48,9 @@ class _LoginPageState extends State<LoginPage> {
 
       if (_remainingSeconds <= 0) {
         _timer?.cancel();
-        setState(() {});
-      } else {
-        setState(() {});
       }
+
+      setState(() {});
     });
   }
 
@@ -62,11 +58,11 @@ class _LoginPageState extends State<LoginPage> {
     int seconds = 0;
 
     if (_failedAttempts >= 10) {
-      seconds = 300; // 5 menit
+      seconds = 300;
     } else if (_failedAttempts >= 5) {
-      seconds = 120; // 2 menit
+      seconds = 120;
     } else if (_failedAttempts >= 3) {
-      seconds = 30; // 30 detik
+      seconds = 30;
     }
 
     if (seconds > 0) {
@@ -78,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _login() async {
     if (_isLocked) {
       _showSnack(
-        'Terlalu banyak percobaan login.\nCoba lagi dalam $_remainingSeconds detik.',
+        'Terlalu banyak percobaan.\nCoba lagi dalam $_remainingSeconds detik.',
         isError: true,
       );
       return;
@@ -97,46 +93,23 @@ class _LoginPageState extends State<LoginPage> {
         _passCtrl.text,
       );
 
-      // reset kalau berhasil
       _failedAttempts = 0;
       _lockUntil = null;
       _timer?.cancel();
-
     } catch (e) {
       _failedAttempts++;
-
       _applyLockRule();
 
-      if (_isLocked) {
-        _showSnack(
-          'Login gagal $_failedAttempts kali.\nCoba lagi dalam $_remainingSeconds detik.',
-          isError: true,
-        );
-      } else {
-        _showSnack(
-          'Email atau password salah.',
-          isError: true,
-        );
-      }
+      _showSnack(
+        _isLocked
+            ? 'Login terkunci $_remainingSeconds detik'
+            : 'Email atau password salah',
+        isError: true,
+      );
     } finally {
       if (mounted) {
         setState(() => _loading = false);
       }
-    }
-  }
-
-  void _onLogoTap() {
-    setState(() => _logoTapCount++);
-
-    if (_logoTapCount >= 5) {
-      _logoTapCount = 0;
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const RegisterPage(),
-        ),
-      );
     }
   }
 
@@ -164,152 +137,130 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // BACKGROUND
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.hijauEmerald,
-                  Color(0xFF0D4A33),
-                ],
-              ),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppTheme.hijauEmerald,
+              Color(0xFF0D4A33),
+            ],
           ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
 
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: _onLogoTap,
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        color: AppTheme.emas,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: const Icon(
-                        Icons.store_rounded,
-                        color: Colors.white,
-                        size: 46,
-                      ),
+                Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      fit: BoxFit.cover,
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 20),
+                const SizedBox(height: 35),
 
-                  const Text(
-                    'Kasir Barokah',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+                // FORM LOGIN
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(22),
                   ),
+                  child: Column(
+                    children: [
 
-                  const SizedBox(height: 35),
-
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _emailCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email_outlined),
-                          ),
+                      TextField(
+                        controller: _emailCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
                         ),
+                      ),
 
-                        const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                        TextField(
-                          controller: _passCtrl,
-                          obscureText: _obscure,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon:
-                                const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _obscure = !_obscure;
-                                });
-                              },
-                              icon: Icon(
-                                _obscure
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
+                      TextField(
+                        controller: _passCtrl,
+                        obscureText: _obscure,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _obscure = !_obscure;
+                              });
+                            },
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                             ),
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed:
-                                (_loading || _isLocked)
-                                    ? null
-                                    : _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  AppTheme.hijauEmerald,
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(14),
-                              ),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed:
+                              (_loading || _isLocked) ? null : _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.hijauEmerald,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
                             ),
-                            child: _loading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : Text(
-                                    _isLocked
-                                        ? _lockText()
-                                        : 'Masuk',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight:
-                                          FontWeight.w700,
-                                    ),
+                          ),
+                          child: _loading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  _isLocked
+                                      ? _lockText()
+                                      : 'Masuk',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
                                   ),
+                                ),
+                        ),
+                      ),
+
+                      if (_isLocked) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          'Terlalu banyak percobaan login',
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-
-                        if (_isLocked) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            'Terlalu banyak percobaan login',
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ]
                       ],
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

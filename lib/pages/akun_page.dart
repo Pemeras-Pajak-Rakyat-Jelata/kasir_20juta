@@ -453,21 +453,31 @@ class _AkunPageState extends State<AkunPage> {
                     height: 48,
                     child: OutlinedButton.icon(
                       onPressed: _logout,
-                      icon: const Icon(Icons.logout_rounded,
-                          color: AppTheme.merahError),
-                      label: const Text('Keluar',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.merahError,
-                              fontSize: 15)),
+                      icon: const Icon(
+                        Icons.logout_rounded,
+                        color: AppTheme.merahError,
+                      ),
+                      label: const Text(
+                        'Keluar',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.merahError,
+                          fontSize: 15,
+                        ),
+                      ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppTheme.merahError),
+                        side: const BorderSide(
+                          color: AppTheme.merahError,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 100),
                   const SizedBox(height: 8),
                   Text(
                     'Kasir Barokah · بَارَكَ اللهُ',

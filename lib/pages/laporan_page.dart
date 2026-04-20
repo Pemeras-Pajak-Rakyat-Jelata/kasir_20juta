@@ -507,6 +507,36 @@ pw.Widget _pdfRow(String kiri, String kanan) {
   }
 }
 
+List<BarChartGroupData> _buildBarGroups(
+    List<Map<String, dynamic>> transaksi) {
+  final Map<int, double> data = {};
+
+  for (var t in transaksi) {
+    final waktu =
+        DateTime.parse(t['created_at']).toLocal();
+
+    final jam = waktu.hour;
+
+    data[jam] =
+        (data[jam] ?? 0) +
+        (t['total'] as num).toDouble();
+  }
+
+  return data.entries.map((e) {
+    return BarChartGroupData(
+      x: e.key,
+      barRods: [
+        BarChartRodData(
+          toY: e.value,
+          width: 14,
+          color: AppTheme.hijauEmerald,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ],
+    );
+  }).toList();
+}
+
 class _HarianTab extends StatelessWidget {
   final DateTime tanggal;
   final List<Map<String, dynamic>> transaksi;
@@ -524,6 +554,40 @@ class _HarianTab extends StatelessWidget {
     required this.onRefresh,
   });
 
+  Map<int, double> get dataPerJam {
+    final Map<int, double> hasil = {};
+
+    for (var t in transaksi) {
+      final waktu =
+          DateTime.parse(t['created_at']).toLocal();
+
+      final jam = waktu.hour;
+
+      hasil[jam] =
+          (hasil[jam] ?? 0) +
+          (t['total'] as num).toDouble();
+    }
+
+    return hasil;
+  }
+
+  List<BarChartGroupData> _buildBarGroups() {
+    return dataPerJam.entries.map((e) {
+      return BarChartGroupData(
+        x: e.key,
+        barRods: [
+          BarChartRodData(
+            toY: e.value,
+            width: 14,
+            color: AppTheme.hijauEmerald,
+            borderRadius:
+                BorderRadius.circular(5),
+          ),
+        ],
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -536,46 +600,200 @@ class _HarianTab extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Tanggal badge
+                  // Badge tanggal
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppTheme.hijauEmerald.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      color: AppTheme
+                          .hijauEmerald
+                          .withOpacity(0.1),
+                      borderRadius:
+                          BorderRadius.circular(
+                              20),
                     ),
                     child: Text(
                       fmtTgl.format(tanggal),
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
+                      style:
+                          const TextStyle(
+                        fontFamily:
+                            'Poppins',
+                        fontWeight:
+                            FontWeight.w600,
                         fontSize: 13,
-                        color: AppTheme.hijauEmerald,
+                        color: AppTheme
+                            .hijauEmerald,
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 16),
 
-                  // Summary cards
-                  Row(children: [
-                    Expanded(
-                      child: _StatCard(
-                        label: 'Total Omzet',
-                        value: 'Rp ${fmt.format(total)}',
-                        icon: Icons.payments_rounded,
-                        color: AppTheme.hijauEmerald,
+                  // CARD
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          label:
+                              'Total Omzet',
+                          value:
+                              'Rp ${fmt.format(total)}',
+                          icon: Icons
+                              .payments_rounded,
+                          color: AppTheme
+                              .hijauEmerald,
+                        ),
+                      ),
+                      const SizedBox(
+                          width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          label:
+                              'Transaksi',
+                          value:
+                              '${transaksi.length}x',
+                          icon: Icons
+                              .receipt_long_rounded,
+                          color:
+                              AppTheme.emas,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // GRAFIK
+                  Container(
+                    padding:
+                        const EdgeInsets.all(
+                            18),
+                    decoration:
+                        BoxDecoration(
+                      color:
+                          Colors.white,
+                      borderRadius:
+                          BorderRadius
+                              .circular(
+                                  18),
+                      border:
+                          Border.all(
+                        color: const Color(
+                            0xFFE5E7EB),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        label: 'Transaksi',
-                        value: '${transaksi.length}x',
-                        icon: Icons.receipt_long_rounded,
-                        color: AppTheme.emas,
-                      ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment
+                              .start,
+                      children: [
+                        const Text(
+                          'Statistik Penjualan per Jam',
+                          style:
+                              TextStyle(
+                            fontFamily:
+                                'Poppins',
+                            fontWeight:
+                                FontWeight
+                                    .w700,
+                            fontSize:
+                                14,
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 18),
+
+                        SizedBox(
+                          height: 250,
+                          child:
+                              BarChart(
+                            BarChartData(
+                              alignment:
+                                  BarChartAlignment
+                                      .spaceAround,
+                              borderData:
+                                  FlBorderData(
+                                      show:
+                                          false),
+                              gridData:
+                                  FlGridData(
+                                      show:
+                                          true),
+                              titlesData:
+                                  FlTitlesData(
+                                topTitles:
+                                    AxisTitles(
+                                  sideTitles:
+                                      SideTitles(
+                                          showTitles:
+                                              false),
+                                ),
+                                rightTitles:
+                                    AxisTitles(
+                                  sideTitles:
+                                      SideTitles(
+                                          showTitles:
+                                              false),
+                                ),
+                                leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 42,
+                                  interval: total <= 10000
+                                      ? 2000
+                                      : total <= 50000
+                                          ? 10000
+                                          : 20000,
+                                  getTitlesWidget: (value, meta) {
+                                    if (value == 0) {
+                                      return const Text(
+                                        '0',
+                                        style: TextStyle(fontSize: 10),
+                                      );
+                                    }
+
+                                    return Text(
+                                      '${(value / 1000).toStringAsFixed(0)}K',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontFamily: 'Poppins',
+                                        color: AppTheme.abuAbu,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                                bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 28,
+                                    getTitlesWidget:
+                                        (value,
+                                            meta) {
+                                      return Text(
+                                        '${value.toInt()}',
+                                        style:
+                                            const TextStyle(
+                                          fontSize:
+                                              10,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              barGroups:
+                                  _buildBarGroups(),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ]),
+                  ),
                 ],
               ),
             ),
@@ -585,98 +803,122 @@ class _HarianTab extends StatelessWidget {
             SliverFillRemaining(
               child: Center(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize:
+                      MainAxisSize.min,
                   children: [
-                    Icon(Icons.receipt_long_outlined,
-                        size: 56,
-                        color: AppTheme.abuAbu.withOpacity(0.4)),
-                    const SizedBox(height: 12),
-                    const Text('Tidak ada transaksi pada tanggal ini',
-                        style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: AppTheme.abuAbu,
-                            fontSize: 13)),
+                    Icon(
+                      Icons
+                          .receipt_long_outlined,
+                      size: 56,
+                      color: AppTheme
+                          .abuAbu
+                          .withOpacity(
+                              0.4),
+                    ),
+                    const SizedBox(
+                        height: 12),
+                    const Text(
+                      'Tidak ada transaksi pada tanggal ini',
+                      style: TextStyle(
+                        fontFamily:
+                            'Poppins',
+                        color: AppTheme
+                            .abuAbu,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ),
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              padding:
+                  const EdgeInsets.fromLTRB(
+                      16, 0, 16, 24),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
+                delegate:
+                    SliverChildBuilderDelegate(
                   (ctx, i) {
-                    final t = transaksi[i];
+                    final t =
+                        transaksi[i];
+
                     final waktu =
-                        DateTime.parse(t['created_at']).toLocal();
-                    final detail = (t['detail_transaksi'] as List?) ?? [];
+                        DateTime.parse(
+                                t[
+                                    'created_at'])
+                            .toLocal();
+
+                    final detail =
+                        (t['detail_transaksi']
+                                as List?) ??
+                            [];
+
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      margin:
+                          const EdgeInsets
+                              .only(
+                              bottom:
+                                  10),
+                      decoration:
+                          BoxDecoration(
+                        color: Colors
+                            .white,
+                        borderRadius:
+                            BorderRadius
+                                .circular(
+                                    14),
+                        border:
+                            Border.all(
+                          color: const Color(
+                              0xFFE5E7EB),
+                        ),
                       ),
-                      child: ExpansionTile(
-                        tilePadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                        leading: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color:
-                                AppTheme.hijauEmerald.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.receipt_rounded,
-                              color: AppTheme.hijauEmerald, size: 22),
+                      child:
+                          ExpansionTile(
+                        tilePadding:
+                            const EdgeInsets
+                                .symmetric(
+                          horizontal:
+                              16,
+                          vertical:
+                              4,
                         ),
                         title: Text(
                           'Transaksi #${t['id']}',
-                          style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13),
                         ),
                         subtitle: Text(
                           '${DateFormat('HH:mm').format(waktu)} · ${t['metode_bayar'] ?? '-'}',
-                          style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 11,
-                              color: AppTheme.abuAbu),
                         ),
-                        trailing: Text(
+                        trailing:
+                            Text(
                           'Rp ${fmt.format(t['total'])}',
-                          style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: AppTheme.hijauEmerald),
                         ),
-                        children: detail.map<Widget>((d) {
-                          final nama = d['produk']?['nama'] ?? '-';
+                        children: detail
+                            .map<Widget>(
+                                (d) {
+                          final nama = d[
+                                      'produk']
+                                  ?[
+                                  'nama'] ??
+                              '-';
+
                           return Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                            child: Row(
+                            padding:
+                                const EdgeInsets
+                                    .all(
+                                        12),
+                            child:
+                                Row(
                               children: [
-                                const Icon(Icons.circle,
-                                    size: 6, color: AppTheme.abuAbu),
-                                const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(
+                                  child:
+                                      Text(
                                     '$nama x${d['qty']}',
-                                    style: const TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 12),
                                   ),
                                 ),
                                 Text(
                                   'Rp ${fmt.format(d['subtotal'])}',
-                                  style: const TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 12,
-                                      color: AppTheme.hijauEmerald,
-                                      fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -685,7 +927,8 @@ class _HarianTab extends StatelessWidget {
                       ),
                     );
                   },
-                  childCount: transaksi.length,
+                  childCount:
+                      transaksi.length,
                 ),
               ),
             ),
@@ -694,7 +937,6 @@ class _HarianTab extends StatelessWidget {
     );
   }
 }
-
 class _BulananTab extends StatelessWidget {
   final DateTime tanggal;
   final Map<String, dynamic> ringkasan;

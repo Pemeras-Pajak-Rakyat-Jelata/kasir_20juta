@@ -51,7 +51,8 @@ class _MainPageState extends State<MainPage> {
             AbsensiPage(),
             AkunPage(),
           ];
-          _navItems = [
+
+          _navItems = const [
             _NavItem(icon: Icons.dashboard_rounded, label: 'Dashboard'),
             _NavItem(icon: Icons.point_of_sale_rounded, label: 'Kasir'),
             _NavItem(icon: Icons.inventory_2_rounded, label: 'Stok'),
@@ -66,7 +67,8 @@ class _MainPageState extends State<MainPage> {
             StokPage(),
             AkunPage(),
           ];
-          _navItems = [
+
+          _navItems = const [
             _NavItem(icon: Icons.dashboard_rounded, label: 'Dashboard'),
             _NavItem(icon: Icons.point_of_sale_rounded, label: 'Kasir'),
             _NavItem(icon: Icons.inventory_2_rounded, label: 'Stok'),
@@ -86,7 +88,9 @@ class _MainPageState extends State<MainPage> {
     if (_loading) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: AppTheme.hijauEmerald),
+          child: CircularProgressIndicator(
+            color: AppTheme.hijauEmerald,
+          ),
         ),
       );
     }
@@ -115,52 +119,74 @@ class _MainPageState extends State<MainPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(_navItems.length, (i) {
                 final item = _navItems[i];
                 final selected = _currentIndex == i;
 
-                return GestureDetector(
-                  onTap: () async {
-                    setState(() => _currentIndex = i);
-                    if (i == 1) kasirKey.currentState?.reload();
-                    await Future.delayed(const Duration(milliseconds: 150));
-                    setState(() {});
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeInOut,
-                    padding: selected
-                        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
-                        : const EdgeInsets.all(10),
-                    decoration: selected
-                        ? BoxDecoration(
-                            color: const Color(0xFFF5A823),
-                            borderRadius: BorderRadius.circular(30),
-                          )
-                        : null,
-                    child: selected
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(item.icon, color: Colors.white, size: 20),
-                              const SizedBox(width: 6),
-                              Text(
-                                item.label,
-                                style: const TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
+                return Expanded(
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () async {
+                        setState(() => _currentIndex = i);
+
+                        if (i == 1) {
+                          kasirKey.currentState?.reload();
+                        }
+
+                        await Future.delayed(
+                          const Duration(milliseconds: 150),
+                        );
+
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        padding: selected
+                            ? const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 10,
+                              )
+                            : const EdgeInsets.all(10),
+                        decoration: selected
+                            ? BoxDecoration(
+                                color: const Color(0xFFF5A823),
+                                borderRadius: BorderRadius.circular(30),
+                              )
+                            : null,
+                        child: selected
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    item.icon,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      item.label,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Icon(
+                                item.icon,
+                                color: AppTheme.hijauEmerald,
+                                size: 22,
                               ),
-                            ],
-                          )
-                        : Icon(
-                            item.icon,
-                            color: AppTheme.hijauEmerald,
-                            size: 24,
-                          ),
+                      ),
+                    ),
                   ),
                 );
               }),
@@ -172,10 +198,12 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
-// ← _NavItem harus di LUAR class _MainPageState
 class _NavItem {
   final IconData icon;
   final String label;
 
-  const _NavItem({required this.icon, required this.label});
+  const _NavItem({
+    required this.icon,
+    required this.label,
+  });
 }

@@ -478,7 +478,9 @@ void didChangeDependencies() {
 
           // ── Keranjang Panel ──
           if (_keranjang.isNotEmpty)
-            Container(
+  SafeArea(
+    top: false,
+    child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: const BorderRadius.vertical(
@@ -628,6 +630,7 @@ void didChangeDependencies() {
                 ],
               ),
             ),
+          ),
         ],
       ),
     );

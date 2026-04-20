@@ -35,8 +35,34 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate>
+    with WidgetsBindingObserver {
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.detached) {
+      await Supabase.instance.client.auth.signOut();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,28 +71,47 @@ class AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         }
+
         final session = snapshot.data?.session;
+
         if (session != null) {
-          // Sync profil dari metadata saat pertama login
-          _syncProfil(session);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _handleLogin(session);
+          });
+
           return const MainPage();
         }
+
         return const LoginPage();
       },
     );
   }
 
+  Future<void> _handleLogin(Session session) async {
+    try {
+      await _syncProfil(session);
+      await SupabaseService.absenMasuk();
+    } catch (e) {
+      debugPrint('Auto login gagal: $e');
+    }
+  }
+
   Future<void> _syncProfil(Session session) async {
     try {
       final meta = session.user.userMetadata;
+
       if (meta == null || meta.isEmpty) return;
 
       final existing = await SupabaseService.getProfil();
-      // Hanya update jika nama belum terisi (login pertama kali)
-      if (existing == null || (existing['nama'] == null || existing['nama'].toString().isEmpty)) {
+
+      if (existing == null ||
+          existing['nama'] == null ||
+          existing['nama'].toString().isEmpty) {
         await SupabaseService.updateProfil({
           'nama': meta['nama'] ?? '',
           'is_admin': meta['is_admin'] ?? false,

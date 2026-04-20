@@ -67,35 +67,112 @@ class _StokPageState extends State<StokPage> {
       }
   }
 
-  Future<void> _hapus(int id, String nama) async {
-    final konfirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Hapus Produk',
-            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
-        content: Text('Yakin ingin menghapus "$nama"?',
-            style: const TextStyle(fontFamily: 'Poppins')),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.merahError),
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
-    );
-    if (konfirm == true) {
-      await SupabaseService.hapusProduk(id);
-      await _load();
+  Future<void> _showTambahStok(Map<String, dynamic> p) async {
+  final ctrl = TextEditingController();
 
-      if (mounted) Navigator.pop(context);
+  final result = await showDialog<int>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: Text('Tambah Stok ${p['nama']}'),
+      content: TextField(
+        controller: ctrl,
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(
+          labelText: 'Jumlah tambah stok',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final val = int.tryParse(ctrl.text) ?? 0;
+            Navigator.pop(context, val);
+          },
+          child: const Text('Tambah'),
+        ),
+      ],
+    ),
+  );
+
+  if (result != null && result > 0) {
+    final stokBaru = (p['stok'] ?? 0) + result;
+
+    await SupabaseService.client
+        .from('produk')
+        .update({'stok': stokBaru})
+        .eq('id', p['id']);
+
+    _load();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Stok berhasil ditambah +$result')),
+      );
     }
   }
+}
+
+  Future<void> _hapus(int id, String nama) async {
+  final konfirm = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: const Text(
+        'Hapus Produk',
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      content: Text(
+        'Yakin ingin menghapus "$nama"?',
+        style: const TextStyle(fontFamily: 'Poppins'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.merahError,
+          ),
+          child: const Text('Hapus'),
+        ),
+      ],
+    ),
+  );
+
+  if (konfirm == true) {
+    try {
+      await SupabaseService.hapusProduk(id);
+
+      if (mounted) {
+        await _load();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Produk berhasil dihapus'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus: $e'),
+          ),
+        );
+      }
+    }
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -132,16 +209,24 @@ class _StokPageState extends State<StokPage> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showForm(),
-        backgroundColor: AppTheme.hijauEmerald,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Tambah Produk',
-            style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
-                color: Colors.white)),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
+floatingActionButton: Padding(
+  padding: const EdgeInsets.only(bottom: 75),
+  child: FloatingActionButton.extended(
+    onPressed: () => _showForm(),
+    backgroundColor: AppTheme.hijauEmerald,
+    icon: const Icon(Icons.add, color: Colors.white),
+    label: const Text(
+      'Tambah Produk',
+      style: TextStyle(
+        fontFamily: 'Poppins',
+        fontWeight: FontWeight.w600,
+        color: Colors.white,
       ),
+    ),
+  ),
+),
       body: _loading
           ? const Center(
           child: CircularProgressIndicator(color: AppTheme.hijauEmerald))
@@ -288,10 +373,24 @@ class _StokPageState extends State<StokPage> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                       onSelected: (v) {
-                        if (v == 'edit') _showForm(produk: p);
-                        if (v == 'hapus') _hapus(p['id'], p['nama']);
-                      },
+                      if (v == 'edit') _showForm(produk: p);
+                      if (v == 'stok') _showTambahStok(p);
+                      if (v == 'hapus') _hapus(p['id'], p['nama']);
+                    },
                       itemBuilder: (_) => [
+                        const PopupMenuItem(
+                        value: 'stok',
+                        child: Row(
+                          children: [
+                            Icon(Icons.add_box_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'Tambah Stok',
+                              style: TextStyle(fontFamily: 'Poppins'),
+                            ),
+                          ],
+                        ),
+                      ),
                         const PopupMenuItem(
                           value: 'edit',
                           child: Row(children: [
@@ -346,6 +445,7 @@ class _ProdukFormState extends State<_ProdukForm> {
   final _kategoriCtrl = TextEditingController();
   final _satuanCtrl = TextEditingController();
   final _minCtrl = TextEditingController();
+  final _stokAwalCtrl = TextEditingController();
   String? _selectedSatuan = 'Pcs';
   File? _imageFile;
   String? _gambarUrl;
@@ -365,6 +465,7 @@ class _ProdukFormState extends State<_ProdukForm> {
     _stokCtrl.text = p['stok']?.toString() ?? '';
     _kategoriCtrl.text = p['kategori'] ?? '';
     _minCtrl.text = p['stok_minimum']?.toString() ?? '5';
+    _stokAwalCtrl.text = p['stok']?.toString() ?? '0';
 
     final satuan = p['satuan'] ?? 'Pcs';
 
@@ -384,10 +485,11 @@ class _ProdukFormState extends State<_ProdukForm> {
     _selectedSatuan = 'Pcs';
     _satuanCtrl.text = 'Pcs';
     _minCtrl.text = '5';
+    _stokAwalCtrl.text = '0';
   }
 }
 
- Future<void> _pickImage() async {
+  Future<void> _pickImage() async {
   final picked = await picker.pickImage(source: ImageSource.gallery);
 
   if (picked != null) {
@@ -430,28 +532,26 @@ class _ProdukFormState extends State<_ProdukForm> {
            print("UPLOAD URL: $imageUrl");
     }
     
-    final harga =
-        int.tryParse(_hargaCtrl.text.replaceAll('.', '')) ?? 0;
+   final harga = int.tryParse(_hargaCtrl.text.replaceAll('.', '')) ?? 0;
+final stok = int.tryParse(_stokAwalCtrl.text) ?? 0;
 
-    final stok =
-        int.tryParse(_stokCtrl.text) ?? 0;
-      print("DATA YANG DISIMPAN:");
-    print({
-      'nama': _namaCtrl.text,
-      'harga': harga,
-      'stok': stok,
-      'gambar': imageUrl,
-    });
-    await SupabaseService.client.from('produk').insert({
-      'nama': _namaCtrl.text,
-      'harga': harga,
-      'stok': stok,
-      'kategori': _kategoriCtrl.text,
-      'satuan': _selectedSatuan,
-      'gambar': imageUrl,
-      'user_id': user.id,
-      'stok_minimum': int.tryParse(_minCtrl.text) ?? 0,
-    });
+print({
+  'nama': _namaCtrl.text,
+  'harga': harga,
+  'stok': stok,
+  'gambar': imageUrl,
+});
+
+await SupabaseService.client.from('produk').insert({
+  'nama': _namaCtrl.text,
+  'harga': harga,
+  'stok': stok,
+  'kategori': _kategoriCtrl.text,
+  'satuan': _selectedSatuan,
+  'gambar': imageUrl,
+  'user_id': user.id,
+  'stok_minimum': int.tryParse(_minCtrl.text) ?? 0,
+});
 
     widget.onSaved();
     Navigator.pop(context, true);
@@ -513,67 +613,77 @@ class _ProdukFormState extends State<_ProdukForm> {
               _field(_namaCtrl, 'Nama Produk', Icons.label_outline,
                   required: true),
               const SizedBox(height: 14),
-              Row(children: [
-                Expanded(
-                  child: _field(_hargaCtrl, 'Harga (Rp)', Icons.payments_outlined,
-                      keyboardType: TextInputType.number, required: true,
-                      validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Harga wajib diisi';
-                    }
+              Row(
+  children: [
+    Expanded(
+      child: _field(
+        _hargaCtrl,
+        'Harga (Rp)',
+        Icons.payments_outlined,
+        keyboardType: TextInputType.number,
+        required: true,
+        validator: (v) {
+          if (v == null || v.trim().isEmpty) {
+            return 'Harga wajib diisi';
+          }
+          final harga = int.tryParse(v);
+          if (harga == null) return 'Harga tidak valid';
+          if (harga < 100) return 'Minimal Rp 100';
+          return null;
+        },
+      ),
+    ),
 
-                    final harga = int.tryParse(v);
+    const SizedBox(width: 12),
 
-                    if (harga == null) {
-                      return 'Harga tidak valid';
-                    }
-
-                    if (harga < 100) {
-                      return 'Minimal harga Rp 100';
-                    }
-
-                    return null;
-                  },
-                ),
-                      
-                ),
+    Expanded(
+      child: _field(
+        _stokAwalCtrl,
+        'Stok Awal',
+        Icons.inventory_2_outlined,
+        keyboardType: TextInputType.number,
+        required: true,
+      ),
+    ),
+  ],
+),
                 
-                const SizedBox(width: 12),
-                Expanded(
-                  child:DropdownButtonFormField<String>(
-                value: _selectedSatuan,
-                decoration: const InputDecoration(
-                  labelText: 'Satuan',
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'Pcs', child: Text('Pcs')),
-                  DropdownMenuItem(value: 'Kg', child: Text('Kg')),
-                  DropdownMenuItem(value: 'Liter', child: Text('Liter')),
-                  DropdownMenuItem(value: 'Box', child: Text('Box')),
-                  DropdownMenuItem(value: 'Pack', child: Text('Pack')),
-                  DropdownMenuItem(value: 'Botol', child: Text('Botol')),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                  _selectedSatuan = value!;
-                  _satuanCtrl.text = value;
-                });
-                },
-              ),
-              ),
-              ]),
-              const SizedBox(height: 14),
-              Row(children: [
-                Expanded(
-                  child: _field(_satuanCtrl, 'Satuan', Icons.straighten_outlined),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _field(_minCtrl, 'Stok Minimum',
-                      Icons.warning_amber_outlined,
-                      keyboardType: TextInputType.number),
-                ),
-              ]),
+                Row(
+  children: [
+    Expanded(
+      child: DropdownButtonFormField<String>(
+        value: _selectedSatuan,
+        decoration: const InputDecoration(
+          labelText: 'Satuan',
+        ),
+        items: const [
+          DropdownMenuItem(value: 'Pcs', child: Text('Pcs')),
+          DropdownMenuItem(value: 'Kg', child: Text('Kg')),
+          DropdownMenuItem(value: 'Liter', child: Text('Liter')),
+          DropdownMenuItem(value: 'Box', child: Text('Box')),
+          DropdownMenuItem(value: 'Pack', child: Text('Pack')),
+          DropdownMenuItem(value: 'Botol', child: Text('Botol')),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _selectedSatuan = value!;
+          });
+        },
+      ),
+    ),
+
+    const SizedBox(width: 12),
+
+    Expanded(
+      child: _field(
+        _minCtrl,
+        'Stok Minimum',
+        Icons.warning_amber_outlined,
+        keyboardType: TextInputType.number,
+      ),
+    ),
+  ],
+),
               const SizedBox(height: 14),
               _field(_kategoriCtrl, 'Kategori (opsional)', Icons.category_outlined),
               GestureDetector(
@@ -635,24 +745,38 @@ class _ProdukFormState extends State<_ProdukForm> {
   }
 
   Widget _field(
-      TextEditingController ctrl,
-      String label,
-      IconData icon, {
-        TextInputType keyboardType = TextInputType.text,
-        bool required = false,
-        String? Function(String?)? validator,
-      }) {
-    return TextFormField(
-      controller: ctrl,
-      keyboardType: keyboardType,
-      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppTheme.hijauEmerald, size: 20),
+  TextEditingController ctrl,
+  String label,
+  IconData icon, {
+  TextInputType keyboardType = TextInputType.text,
+  bool required = false,
+  String? Function(String?)? validator,
+}) {
+  return TextFormField(
+    controller: ctrl,
+    keyboardType: keyboardType,
+    style: const TextStyle(
+      fontFamily: 'Poppins',
+      fontSize: 14,
+    ),
+    decoration: InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(
+        icon,
+        color: AppTheme.hijauEmerald,
+        size: 20,
       ),
-      validator: required
-          ? (v) => (v == null || v.isEmpty) ? 'Wajib diisi' : null
-          : null,
-    );
-  }
+    ),
+
+    validator: validator ??
+        (required
+            ? (v) {
+                if (v == null || v.trim().isEmpty) {
+                  return 'Wajib diisi';
+                }
+                return null;
+              }
+            : null),
+  );
+}
 }
