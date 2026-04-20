@@ -148,6 +148,44 @@ Kontrol akses berbasis peran
 
 ---
 
+## 📱 Widget Overview (Flutter Pages)
+
+Ringkasan widget utama di setiap halaman:
+
+- **🔐 `login_page.dart`**  
+  Form login dengan input, tombol aksi, dan UI modern (gradient, loading, logo).
+
+- **📝 `register_page.dart`**  
+  Form registrasi dengan validasi (`Form`), dialog sukses, dan dekorasi custom.
+
+- **🏠 `main_page.dart`**  
+  Navigasi utama menggunakan `IndexedStack` + custom animated bottom navigation.
+
+- **📊 `dashboard_page.dart`**  
+  Dashboard dengan `Sliver`, pull-to-refresh, dan ringkasan data.
+
+- **💳 `kasir_page.dart`**  
+  Sistem kasir dengan grid produk, keranjang belanja, dan metode pembayaran.
+
+- **📦 `stok_page.dart`**  
+  Manajemen produk dengan list, search, dan form tambah/edit (bottom sheet).
+
+- **📈 `laporan_page.dart`**  
+  Laporan dengan tab (harian/bulanan) + grafik (`fl_chart`) & export data.
+
+- **🧑‍💼 `absensi_page.dart`**  
+  Data absensi dengan filter, statistik, dan export.
+
+- **👤 `akun_page.dart`**  
+  Manajemen profil & user (admin), termasuk edit profil dan kontrol user.
+
+---
+
+### 🔖 Common Widgets
+`Scaffold`, `AppBar`, `Container`, `Column`, `Row`, `Text`, `Icon`, `SizedBox`, `Expanded`, `TextField`, `ElevatedButton`, `SnackBar`, `CircularProgressIndicator`
+
+---
+
 ## 🏗️ Arsitektur & Teknologi
 
 ```
